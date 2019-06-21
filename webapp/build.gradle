@@ -1,0 +1,64 @@
+buildscript {
+  ext.springBootVersion = '2.0.0.M5'
+
+  repositories {
+    mavenLocal()
+    mavenCentral()
+    jcenter()
+    maven { url "https://repo.spring.io/snapshot" }
+    maven { url "https://repo.spring.io/milestone" }
+    maven { url "https://plugins.gradle.org/m2/" }
+  }
+
+  dependencies {
+    classpath "org.springframework.boot:spring-boot-gradle-plugin:$springBootVersion"
+    classpath "org.jetbrains.kotlin:kotlin-allopen:$kotlin_version"
+  }
+}
+
+repositories {
+  maven { url "https://repo.spring.io/snapshot" }
+  maven { url "https://repo.spring.io/milestone" }
+}
+
+apply plugin: 'kotlin-spring'
+apply plugin: 'org.springframework.boot'
+apply plugin: 'io.spring.dependency-management'
+
+sourceSets {
+  main {
+    resources {
+      srcDir "config/dev"
+    }
+  }
+  test {
+    resources {
+      srcDir "config/test"
+    }
+  }
+}
+
+task copyFrontendArtifacts(type: Copy) {
+  dependsOn ':frontend:assemble'
+
+  from "$rootDir/frontend/dist"
+  into "${processResources.destinationDir}/static"
+}
+
+//processResources.dependsOn(copyFrontendArtifacts)
+
+dependencies {
+
+  // CorDapp dependencies
+  // Specify your cordapp's dependencies below, including dependent cordapps
+  compile project(':cordapp')
+
+  // app specific deps
+  compile 'com.corundumstudio.socketio:netty-socketio:1.7.13'
+
+  // Spring Boot
+  compile('org.springframework.boot:spring-boot-starter')
+  compile('org.springframework.boot:spring-boot-starter-web')
+  testCompile('org.springframework.boot:spring-boot-starter-test')
+  testCompile('org.springframework.boot:spring-boot-test')
+}
