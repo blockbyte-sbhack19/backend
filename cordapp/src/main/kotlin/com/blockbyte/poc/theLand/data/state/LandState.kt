@@ -29,8 +29,9 @@ data class LandState(
         fun createLand(trxBuilder: TransactionBuilder,
                        legalLandId: String,
                        landProperty: LandProperty,
-                       landOwner: AbstractParty): UniqueIdentifier {
-            val landState = LandState(legalLandId, landProperty, listOf(landOwner))
+                       landOwner: AbstractParty,
+                       listOwner: AbstractParty): UniqueIdentifier {
+            val landState = LandState(legalLandId, landProperty, listOf(landOwner, listOwner))
             val txCommand = Command(LandContract.Commands.CreateLand(), landOwner.owningKey)
 
             trxBuilder.addOutputState(landState, LandContract.ID).addCommand(txCommand)

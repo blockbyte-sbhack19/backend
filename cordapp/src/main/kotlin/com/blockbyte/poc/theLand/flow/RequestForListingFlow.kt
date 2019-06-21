@@ -3,20 +3,20 @@ package com.blockbyte.poc.theLand.flow
 import co.paralleluniverse.fibers.Suspendable
 import com.blockbyte.poc.theLand.data.LandProperty
 import com.blockbyte.poc.theLand.data.state.LandState
-import com.blockbyte.poc.theLand.regoracle.flow.LandRegistryOracleQuery
-import com.blockbyte.poc.theLand.regoracle.flow.LandRegistryOracleQueryHandler.LandRecord
-import com.blockbyte.poc.theLand.regoracle.flow.LandRegistryOracleQuery.LandRecordRequest
-import com.blockbyte.poc.theLand.whoIs
+import com.blockbyte.poc.theLand.whoAmI
 import com.blockbyte.poc.theLand.whoIsNotary
-import net.corda.core.contracts.StateRef
 import net.corda.core.flows.*
-import net.corda.core.identity.CordaX500Name
 import net.corda.core.identity.Party
+import net.corda.core.serialization.CordaSerializable
 import net.corda.core.transactions.SignedTransaction
 import net.corda.core.transactions.TransactionBuilder
 import net.corda.core.utilities.unwrap
+import java.util.*
 
 class RequestForListingFlow {
+
+    @CordaSerializable
+    data class LandRecord(val legalLandId: String)
 
     @InitiatingFlow
     @StartableByRPC
@@ -47,12 +47,10 @@ class RequestForListingFlow {
     @InitiatedBy(Offer::class)
     class ValidateOffer(private val flowSession: FlowSession) : FlowLogic<Unit>() {
 
-        val owner = flowSession.counterparty
-
-
         @Suspendable
         override fun call() {
             try {
+
                 val txBuilder = TransactionBuilder(whoIsNotary())
 
                 flowSession.receive<LandProperty>().unwrap { requestForListing ->
@@ -61,7 +59,10 @@ class RequestForListingFlow {
                     // TODO: request personal credential and check against proper ownership of the land
 
                     // Stage 2.
-                    LandState.createLand(txBuilder, landRecord.legalLandId, requestForListing, owner)
+                    val owner = flowSession.counterparty
+                    val myNode = whoAmI()
+
+                    LandState.createLand(txBuilder, landRecord.legalLandId, requestForListing, owner, myNode)
                 }
 
                 // Stage 3.
@@ -79,18 +80,9 @@ class RequestForListingFlow {
             }
         }
 
+        // TODO: query to oracle
         @Suspendable
-        private fun queryLandRegistry(location: String): LandRecord {
-            val oracle = whoIs(CordaX500Name("LandRegistry", "Swiss", "CH"))
-            return subFlow(LandRegistryOracleQuery(oracle, LandRecordRequest(location)))
-        }
-    }
-
-    @InitiatingFlow
-    @SchedulableFlow
-    class AutoRelease(val stateRef: StateRef) : FlowLogic<Unit>() {
-
-        override fun call() {
-        }
+        private fun queryLandRegistry(location: String): LandRecord =
+            LandRecord(UUID.randomUUID().toString())
     }
 }

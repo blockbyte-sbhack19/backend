@@ -1,3 +1,2 @@
 include 'cordapp'
 include 'webapp'
-include 'landRegistry-oracle'

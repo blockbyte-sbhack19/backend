@@ -38,8 +38,6 @@ sourceSets {
 dependencies {
     compile 'net.java.dev.jna:jna:4.5.1'
 
-    cordapp project(":landRegistry-oracle")
-
     implementation 'com.github.alexeykoren:konfig:2.0.4'
 
     // Corda integration dependencies
@@ -62,4 +60,8 @@ dependencies {
 task integrationTest(type: Test, dependsOn: []) {
     testClassesDirs = sourceSets.integrationTest.output.classesDirs
     classpath = sourceSets.integrationTest.runtimeClasspath
+}
+
+test {
+    jvmArgs = [ "-javaagent:lib/quasar.jar" ]
 }
