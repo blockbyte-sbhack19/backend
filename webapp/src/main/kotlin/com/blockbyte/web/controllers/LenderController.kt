@@ -17,7 +17,7 @@
 package com.blockbyte.web.controllers
 
 import com.blockbyte.poc.theLand.X500Names
-import com.blockbyte.poc.theLand.data.LandProperty
+import com.blockbyte.poc.theLand.data.LandDetails
 import com.blockbyte.poc.theLand.data.LeasePrice
 import com.blockbyte.poc.theLand.flow.RequestForListingFlow
 import com.blockbyte.web.components.RPCComponent
@@ -47,8 +47,8 @@ class LenderController(val rpc: RPCComponent) {
     @PostMapping("soil")
     fun resultForNewListing(@RequestBody land: API.Land): Any {
         return try {
-            val landProperty = LandProperty(land.coordinate, land.landSize, land.beforeDate, land.afterDate)
-            val leasePrice = LeasePrice(land.landPrice, land.feeForStandart, land.feeForCrop)
+            val landProperty = LandDetails(land.altitude, land.latitude, land.landSize, land.beforeDate, land.afterDate)
+            val leasePrice = LeasePrice(land.landPrice, land.feeForStandard, land.feeForCrop)
 
             val future = proxy.startFlow(RequestForListingFlow::Offer,
                     landProperty, leasePrice, X500Names.ServiceProvider).returnValue

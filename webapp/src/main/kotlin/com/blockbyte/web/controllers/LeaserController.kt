@@ -17,13 +17,13 @@
 package com.blockbyte.web.controllers
 
 import com.blockbyte.poc.theLand.X500Names
+import com.blockbyte.poc.theLand.data.Filter
 import com.blockbyte.poc.theLand.data.Land
 import com.blockbyte.poc.theLand.data.Lease
 import com.blockbyte.poc.theLand.flow.RequestForLeaseFlow
-import com.blockbyte.poc.theLand.flow.RequestForListingFlow
+import com.blockbyte.poc.theLand.flow.SearchAvailableLandsFlow
 import com.blockbyte.web.components.RPCComponent
 import com.blockbyte.web.data.API
-import net.corda.core.identity.CordaX500Name
 import net.corda.core.messaging.startFlow
 import net.corda.core.utilities.getOrThrow
 import net.corda.core.utilities.loggerFor
@@ -44,8 +44,20 @@ class LeaserController(rpc: RPCComponent) {
         return proxy.nodeInfo().legalIdentities.first().name.organisation
     }
 
-    @GetMapping("soil")
-    fun getAvailableLands() {}
+    @PostMapping("soil/filter")
+    fun getAvailableLands(@RequestBody filter: API.Filter) {
+        val serviceProvider = X500Names.ServiceProvider
+        val filter = Filter(
+                filter.maxPrice,
+                filter.minPrice,
+                filter.typeOfCrop,
+                filter.bioStandard,
+                filter.beforeDate,
+                filter.afterDate)
+
+        val future = proxy.startFlow(SearchAvailableLandsFlow::Search, filter, serviceProvider).returnValue
+        future.getOrThrow(Duration.ofSeconds(15))
+    }
 
     @PostMapping("soil")
     fun resultForNewLeasing(@RequestBody lease: API.Lease) {
@@ -56,7 +68,7 @@ class LeaserController(rpc: RPCComponent) {
 
             val lease = Lease(
                     lease.finalPrice,
-                    lease.bioStandart,
+                    lease.bioStandard,
                     lease.typeOfCrop,
                     lease.beforeDate,
                     lease.afterDate)
