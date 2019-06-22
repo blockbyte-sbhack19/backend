@@ -30,8 +30,8 @@ object LeaseSchemaV1 : MappedSchema(
         constructor(landId: String, lease: Lease): this(
                 landId,
                 lease.typeOfCrop,
-                lease.standart,
-                lease.price,
+                lease.bioStandarts,
+                lease.finalPrice,
                 lease.beforeDate,
                 lease.afterDate)
     }

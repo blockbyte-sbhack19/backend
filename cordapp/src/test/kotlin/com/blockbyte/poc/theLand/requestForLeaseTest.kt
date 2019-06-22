@@ -19,7 +19,7 @@ class RequestForLeasingTest: MockNet() {
     @Test
     fun `lease the land`() {
 
-        val property = LandProperty("location", 1, 100, 100)
+        val property = LandProperty("coordinate", 1, 100, 100)
         val price = LeasePrice(1000, mapOf(), mapOf())
 
         val testLandState = LandState("landid#1", property, price,

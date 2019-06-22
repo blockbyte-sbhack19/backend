@@ -6,9 +6,11 @@ import com.blockbyte.poc.theLand.data.Lease
 import com.blockbyte.poc.theLand.data.state.LandState
 import com.blockbyte.poc.theLand.data.state.LeaseState
 import com.blockbyte.poc.theLand.whoAmI
+import com.blockbyte.poc.theLand.whoIs
 import com.blockbyte.poc.theLand.whoIsNotary
 import net.corda.core.contracts.UniqueIdentifier
 import net.corda.core.flows.*
+import net.corda.core.identity.CordaX500Name
 import net.corda.core.node.services.Vault
 import net.corda.core.node.services.queryBy
 import net.corda.core.node.services.vault.builder
@@ -29,7 +31,7 @@ class RequestForLeaseFlow {
         @Suspendable
         override fun call() {
             try {
-                val flowSession: FlowSession = initiateFlow(land.owner)
+                val flowSession: FlowSession = initiateFlow(whoIs(CordaX500Name.parse(land.owner)))
                 flowSession.send(LeaseRequest(land.id, lease))
 
                 val verifyTxFlow = object : SignTransactionFlow(flowSession) {
@@ -42,7 +44,7 @@ class RequestForLeaseFlow {
                 waitForLedgerCommit(subFlow(verifyTxFlow).id)
 
             } catch (e: Exception) {
-                logger.error("The land can not be listed, the verifier interrupt the procedure", e)
+                logger.error("The land can not be listed", e)
             }
         }
     }

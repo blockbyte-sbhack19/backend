@@ -23,7 +23,7 @@ enum class Crop {
 
 @CordaSerializable
 data class LandProperty(
-        val location: String,
+        val coordinate: String,
         val size: Long,
         val beforeDate: Long,
         val afterDate: Long)
@@ -37,12 +37,12 @@ data class LeasePrice(
 @CordaSerializable
 data class Land(
         val id: String,
-        val owner: Party)
+        val owner: String)
 
 @CordaSerializable
 data class Lease(
-        val price: Long,
-        val standart: BioStandart,
+        val finalPrice: Long,
+        val bioStandarts: BioStandart,
         val typeOfCrop: Crop,
         val beforeDate: Long,
         val afterDate: Long)
