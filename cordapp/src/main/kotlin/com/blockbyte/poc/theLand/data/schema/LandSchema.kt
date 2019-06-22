@@ -18,8 +18,9 @@ object LandSchemaV1 : MappedSchema(
     @Table
     class PersistentLand(
             @Column var landId: String,
+            @Column var price: Int,
             @Column var size: Int,
             @Column var beforeDate: Long,
             @Column var afterDate: Long
-    ) : PersistentState() {  constructor(): this("", 0, 0, 0) }
+    ) : PersistentState() {  constructor(): this("", 0,0, 0, 0) }
 }

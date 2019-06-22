@@ -22,14 +22,18 @@ import com.blockbyte.poc.theLand.data.Land
 import com.blockbyte.poc.theLand.data.Lease
 import com.blockbyte.poc.theLand.flow.RequestForLeaseFlow
 import com.blockbyte.poc.theLand.flow.SearchAvailableLandsFlow
+import com.blockbyte.poc.theLand.flow.SearchAvailableLandsFlow.LandCollection
 import com.blockbyte.web.components.RPCComponent
 import com.blockbyte.web.data.API
+import com.blockbyte.web.data.FAILURE
+import net.corda.core.identity.CordaX500Name
 import net.corda.core.messaging.startFlow
 import net.corda.core.utilities.getOrThrow
 import net.corda.core.utilities.loggerFor
 import org.springframework.context.annotation.Profile
 import org.springframework.web.bind.annotation.*
 import java.time.Duration
+import java.util.concurrent.CompletableFuture
 
 @RestController
 @RequestMapping("api/leaser")
@@ -45,8 +49,9 @@ class LeaserController(rpc: RPCComponent) {
     }
 
     @PostMapping("soil/filter")
-    fun getAvailableLands(@RequestBody filter: API.Filter) {
+    fun getAvailableLands(@RequestBody filter: API.Filter): LandCollection {
         val serviceProvider = X500Names.ServiceProvider
+
         val filter = Filter(
                 filter.maxPrice,
                 filter.minPrice,
@@ -55,16 +60,17 @@ class LeaserController(rpc: RPCComponent) {
                 filter.beforeDate,
                 filter.afterDate)
 
-        val future = proxy.startFlow(SearchAvailableLandsFlow::Search, filter, serviceProvider).returnValue
-        future.getOrThrow(Duration.ofSeconds(15))
+        return proxy.startFlow(SearchAvailableLandsFlow::Search, filter, serviceProvider).returnValue.get()
     }
 
     @PostMapping("soil")
     fun resultForNewLeasing(@RequestBody lease: API.Lease) {
         return try {
+            val owner = CordaX500Name.parse(lease.landOwner)
+
             val land = Land(
                     lease.landId,
-                    lease.landOwner)
+                    owner)
 
             val lease = Lease(
                     lease.finalPrice,

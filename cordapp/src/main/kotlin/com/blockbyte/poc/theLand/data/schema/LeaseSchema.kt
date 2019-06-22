@@ -23,7 +23,7 @@ object LeaseSchemaV1 : MappedSchema(
             @Column var landId: String,
             @Column var crop: Crop,
             @Column var standard: BioStandard,
-            @Column var price: Long,
+            @Column var price: Int,
             @Column var beforeDate: Long,
             @Column var afterDate: Long
     ) : PersistentState() {

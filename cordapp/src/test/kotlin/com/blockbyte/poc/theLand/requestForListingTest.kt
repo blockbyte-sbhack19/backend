@@ -17,22 +17,23 @@ class RequestForListingTest: MockNet()  {
     fun `request for new land can be listed`() {
 
         val testLand = LandDetails(
-                coordinate = "coordinate",
+                altitude = 1000,
+                latitude = 1000,
                 size = 10000,
                 beforeDate = 40000,
                 afterDate = 50000)
 
         val testPrice = LeasePrice(
-                landPrice = 10000L,
+                landPrice = 10000,
                 feeForStandard = mapOf(
-                        Pair(BioStandard.NO_GMO, 1000L),
-                        Pair(BioStandard.ANIMALS, 2000L)
+                        Pair(BioStandard.NO_GMO, 1000),
+                        Pair(BioStandard.ANIMALS, 2000)
                 ),
                 feeForCrop = mapOf(
-                        Pair(Crop.ANIMALS, 1000L),
-                        Pair(Crop.NO_GMO, 2000L)))
+                        Pair(Crop.ANIMALS, 1000),
+                        Pair(Crop.NO_GMO, 2000)))
 
-        val requestForListing = RequestForListingFlow.Offer(testLand, testPrice, maintainer.getParty())
+        val requestForListing = RequestForListingFlow.Offer(testLand, testPrice, maintainer.getParty().name)
         val requestForListingRes = lender.startFlow(requestForListing).toCompletableFuture()
 
         net.runNetwork()
