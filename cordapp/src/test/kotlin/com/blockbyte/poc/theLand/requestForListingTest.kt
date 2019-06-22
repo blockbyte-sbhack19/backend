@@ -17,7 +17,7 @@ class RequestForListingTest: MockNet()  {
     fun `request for new land can be listed`() {
 
         val testLand = LandProperty(
-                location = "location",
+                coordinate = "coordinate",
                 size = 10000,
                 beforeDate = 40000,
                 afterDate = 50000)

@@ -5,8 +5,10 @@ import com.blockbyte.poc.theLand.data.LandProperty
 import com.blockbyte.poc.theLand.data.LeasePrice
 import com.blockbyte.poc.theLand.data.state.LandState
 import com.blockbyte.poc.theLand.whoAmI
+import com.blockbyte.poc.theLand.whoIs
 import com.blockbyte.poc.theLand.whoIsNotary
 import net.corda.core.flows.*
+import net.corda.core.identity.CordaX500Name
 import net.corda.core.identity.Party
 import net.corda.core.serialization.CordaSerializable
 import net.corda.core.transactions.SignedTransaction
@@ -26,12 +28,12 @@ class RequestForListingFlow {
     @StartableByRPC
     class Offer(private val landProperty: LandProperty,
                 private val leasePrice: LeasePrice,
-                private val serviceProvider: Party) : FlowLogic<Unit>() {
+                private val serviceProviderName: CordaX500Name) : FlowLogic<Unit>() {
 
         @Suspendable
         override fun call() {
             try {
-                val flowSession: FlowSession = initiateFlow(serviceProvider)
+                val flowSession: FlowSession = initiateFlow(whoIs(serviceProviderName))
 
                 flowSession.send(LandOffer(landProperty, leasePrice))
 
@@ -63,7 +65,7 @@ class RequestForListingFlow {
                     offer -> Pair(offer.property, offer.price) }
 
                 // Stage 1.
-                val landRecord = queryLandRegistry(land.location)
+                val landRecord = queryLandRegistry(land.coordinate)
                 // TODO: request personal credential and check against proper ownership of the land
 
                 // Stage 2.
