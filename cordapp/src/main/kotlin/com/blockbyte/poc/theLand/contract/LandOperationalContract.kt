@@ -5,14 +5,15 @@ import net.corda.core.contracts.Contract
 import net.corda.core.contracts.TypeOnlyCommandData
 import net.corda.core.transactions.LedgerTransaction
 
-class LandContract : Contract {
+class LandOperationalContract : Contract {
     companion object {
         @JvmStatic
-        val ID = LandContract::class.java.name
+        val ID = LandOperationalContract::class.java.name
     }
 
     interface Commands : CommandData {
-        class CreateLand : TypeOnlyCommandData(), Commands
+        class OfferLand : TypeOnlyCommandData(), Commands
+        class LeaseLand : TypeOnlyCommandData(), Commands
     }
 
     override fun verify(tx: LedgerTransaction) {

@@ -1,39 +1,36 @@
 package com.blockbyte.poc.theLand.flow
 
 import co.paralleluniverse.fibers.Suspendable
-import com.blockbyte.poc.theLand.data.LandProperty
-import com.blockbyte.poc.theLand.data.LeasePrice
+import com.blockbyte.poc.theLand.data.Land
+import com.blockbyte.poc.theLand.data.Lease
 import com.blockbyte.poc.theLand.data.state.LandState
+import com.blockbyte.poc.theLand.data.state.LeaseState
 import com.blockbyte.poc.theLand.whoAmI
 import com.blockbyte.poc.theLand.whoIsNotary
+import net.corda.core.contracts.UniqueIdentifier
 import net.corda.core.flows.*
-import net.corda.core.identity.Party
+import net.corda.core.node.services.Vault
+import net.corda.core.node.services.queryBy
+import net.corda.core.node.services.vault.builder
 import net.corda.core.serialization.CordaSerializable
 import net.corda.core.transactions.SignedTransaction
 import net.corda.core.transactions.TransactionBuilder
 import net.corda.core.utilities.unwrap
-import java.util.*
 
-class RequestForListingFlow {
-
-    @CordaSerializable
-    data class LandOffer(val property: LandProperty, val price: LeasePrice)
+class RequestForLeaseFlow {
 
     @CordaSerializable
-    data class LandRecord(val landId: String)
+    data class LeaseRequest(val landId: String, val lease: Lease)
 
     @InitiatingFlow
     @StartableByRPC
-    class Offer(private val landProperty: LandProperty,
-                private val leasePrice: LeasePrice,
-                private val serviceProvider: Party) : FlowLogic<Unit>() {
+    class Proposal(val land: Land, val lease: Lease) : FlowLogic<Unit>() {
 
         @Suspendable
         override fun call() {
             try {
-                val flowSession: FlowSession = initiateFlow(serviceProvider)
-
-                flowSession.send(LandOffer(landProperty, leasePrice))
+                val flowSession: FlowSession = initiateFlow(land.owner)
+                flowSession.send(LeaseRequest(land.id, lease))
 
                 val verifyTxFlow = object : SignTransactionFlow(flowSession) {
                     @Suspendable
@@ -50,46 +47,41 @@ class RequestForListingFlow {
         }
     }
 
-    @InitiatedBy(Offer::class)
-    class ValidateOffer(private val flowSession: FlowSession) : FlowLogic<Unit>() {
+    @InitiatedBy(Proposal::class)
+    class Accept(private val flowSession: FlowSession) : FlowLogic<Unit>() {
 
         @Suspendable
         override fun call() {
             try {
-
                 val txBuilder = TransactionBuilder(whoIsNotary())
 
-                val (land, price) = flowSession.receive<LandOffer>().unwrap {
-                    offer -> Pair(offer.property, offer.price) }
+                val (landId, lease) = flowSession.receive<LeaseRequest>().unwrap {
+                    proposal -> Pair(proposal.landId, proposal.lease) }
 
-                // Stage 1.
-                val landRecord = queryLandRegistry(land.location)
-                // TODO: request personal credential and check against proper ownership of the land
-
-                // Stage 2.
-                val owner = flowSession.counterparty
+                val leaser = flowSession.counterparty
                 val myNode = whoAmI()
 
-                LandState.createLand(txBuilder, landRecord.landId, land, price, owner, myNode)
+                // Stage 1.
+                val landState = serviceHub.vaultService.queryBy<LandState>(
+                        LandState.buildQuery(landId)
+                ).states.single()
 
-                // Stage 3.
+                LandState.leaseLand(txBuilder, landState, myNode, leaser)
+                LeaseState.createLease(txBuilder, landId, myNode, leaser, lease)
+
+                // Stage 2.
                 txBuilder.verify(serviceHub)
 
-                // Stage 4.
+                // Stage 3.
                 val signedBySelf = serviceHub.signInitialTransaction(txBuilder)
                 val signedByAll = subFlow(CollectSignaturesFlow(signedBySelf, listOf(flowSession)))
 
-                // Stage 5.
+                // Stage 4.
                 subFlow(FinalityFlow(signedByAll))
             } catch (e: Exception) {
-                logger.error("The can not be listed", e)
+                logger.error("The land can not be leased", e)
                 throw FlowException(e.message)
             }
         }
-
-        // TODO: query to oracle
-        @Suspendable
-        private fun queryLandRegistry(location: String): LandRecord =
-            LandRecord(UUID.randomUUID().toString())
     }
 }
