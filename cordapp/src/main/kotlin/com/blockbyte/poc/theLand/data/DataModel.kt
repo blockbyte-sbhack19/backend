@@ -1,5 +1,6 @@
 package com.blockbyte.poc.theLand.data
 
+import net.corda.core.identity.CordaX500Name
 import net.corda.core.serialization.CordaSerializable
 
 @CordaSerializable
@@ -31,14 +32,14 @@ data class LandDetails(
 
 @CordaSerializable
 data class LeasePrice(
-        val landPrice: Long,
-        val feeForStandard: Map<BioStandard, Long>,
-        val feeForCrop: Map<Crop, Long>)
+        val landPrice: Int,
+        val feeForStandard: Map<BioStandard, Int>,
+        val feeForCrop: Map<Crop, Int>)
 
 @CordaSerializable
 data class Land(
         val id: String,
-        val owner: String)
+        val owner: CordaX500Name?)
 
 @CordaSerializable
 data class LandInfo(
@@ -49,7 +50,7 @@ data class LandInfo(
 
 @CordaSerializable
 data class Lease(
-        val finalPrice: Long,
+        val finalPrice: Int,
         val bioStandards: BioStandard,
         val typeOfCrop: Crop,
         val beforeDate: Long,

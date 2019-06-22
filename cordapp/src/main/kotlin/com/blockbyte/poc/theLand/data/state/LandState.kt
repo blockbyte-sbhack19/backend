@@ -34,6 +34,7 @@ data class LandState(
         return when (schema) {
             is LandSchemaV1 -> LandSchemaV1.PersistentLand(
                     landId,
+                    price.landPrice,
                     details.size,
                     details.beforeDate,
                     details.afterDate)

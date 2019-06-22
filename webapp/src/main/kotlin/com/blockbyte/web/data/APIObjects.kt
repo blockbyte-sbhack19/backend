@@ -12,9 +12,9 @@ interface API {
             val latitude: Long,
             val altitude: Long,
             val landSize: Int,
-            val landPrice: Long,
-            val feeForStandard: Map<BioStandard, Long>,
-            val feeForCrop: Map<Crop, Long>,
+            val landPrice: Int,
+            val feeForStandard: Map<BioStandard, Int>,
+            val feeForCrop: Map<Crop, Int>,
             val beforeDate: Long,
             val afterDate: Long)
 
@@ -23,7 +23,7 @@ interface API {
             val landOwner: String,
             val bioStandard: BioStandard,
             val typeOfCrop: Crop,
-            val finalPrice: Long,
+            val finalPrice: Int,
             val beforeDate: Long,
             val afterDate: Long)
 
