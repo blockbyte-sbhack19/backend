@@ -1,42 +1,71 @@
 package com.blockbyte.poc.theLand.data.state
 
-import com.blockbyte.poc.theLand.contract.LandContract
+import com.blockbyte.poc.theLand.contract.LandOperationalContract
 import com.blockbyte.poc.theLand.data.LandProperty
+import com.blockbyte.poc.theLand.data.LeasePrice
 import net.corda.core.contracts.Command
 import net.corda.core.contracts.LinearState
+import net.corda.core.contracts.StateAndRef
 import net.corda.core.contracts.UniqueIdentifier
 import net.corda.core.identity.AbstractParty
+import net.corda.core.node.services.Vault
+import net.corda.core.node.services.vault.QueryCriteria
+import net.corda.core.node.services.vault.builder
 import net.corda.core.schemas.MappedSchema
 import net.corda.core.schemas.PersistentState
 import net.corda.core.schemas.QueryableState
+import net.corda.core.serialization.CordaSerializable
 import net.corda.core.transactions.TransactionBuilder
 
+@CordaSerializable
+enum class Status { FREE, OCCUPIED, UNAVAILABLE }
+
 data class LandState(
-        val legalLandId: String,
+        val landId: String,
         val property: LandProperty,
+        val price: LeasePrice,
+        val status: Status =  Status.FREE,
         override val participants: List<AbstractParty>,
         override val linearId: UniqueIdentifier = UniqueIdentifier()
 ) : LinearState, QueryableState {
     override fun supportedSchemas(): Iterable<MappedSchema> = listOf(LandSchemaV1)
     override fun generateMappedObject(schema: MappedSchema): PersistentState {
         return when (schema) {
-            is LandSchemaV1 -> LandSchemaV1.PersistentLand(this.legalLandId)
+            is LandSchemaV1 -> LandSchemaV1.PersistentLand(landId)
             else -> throw IllegalArgumentException("Unrecognised schema $schema")
         }
     }
 
     companion object {
         fun createLand(trxBuilder: TransactionBuilder,
-                       legalLandId: String,
+                       landId: String,
                        landProperty: LandProperty,
+                       leasePrice : LeasePrice,
                        landOwner: AbstractParty,
-                       listOwner: AbstractParty): UniqueIdentifier {
-            val landState = LandState(legalLandId, landProperty, listOf(landOwner, listOwner))
-            val txCommand = Command(LandContract.Commands.CreateLand(), landOwner.owningKey)
+                       maintainer: AbstractParty) {
+            val landState = LandState(landId, landProperty, leasePrice, participants = listOf(landOwner, maintainer))
+            val txCommand = Command(LandOperationalContract.Commands.OfferLand(), landOwner.owningKey)
 
-            trxBuilder.addOutputState(landState, LandContract.ID).addCommand(txCommand)
+            trxBuilder.addOutputState(landState, LandOperationalContract.ID).addCommand(txCommand)
+        }
 
-            return landState.linearId
+        fun leaseLand(trxBuilder: TransactionBuilder,
+                      land: StateAndRef<LandState>,
+                      lender:  AbstractParty,
+                      leaser: AbstractParty) {
+            val participants = land.state.data.participants + leaser
+            val leaseLand = land.state.data.copy(status = Status.OCCUPIED, participants = participants)
+            val txCommand = Command(LandOperationalContract.Commands.LeaseLand(), listOf(leaser.owningKey, lender.owningKey))
+
+            trxBuilder.addInputState(land)
+            trxBuilder.addOutputState(leaseLand, LandOperationalContract.ID).addCommand(txCommand)
+        }
+
+        fun buildQuery(landId: String) = builder {
+            QueryCriteria.VaultQueryCriteria(Vault.StateStatus.UNCONSUMED)
+                    .and( QueryCriteria.VaultCustomQueryCriteria(
+                            LandSchemaV1.PersistentLand::landId.equal(landId))
+                    )
         }
     }
 }

@@ -8,9 +8,7 @@ import javax.persistence.Table
 
 object LandSchema
 
-/**
- * An ReferralSchemaV1 schema.
- */
+
 object LandSchemaV1 : MappedSchema(
     schemaFamily = LandSchema.javaClass,
     version = 1,
@@ -18,6 +16,7 @@ object LandSchemaV1 : MappedSchema(
 ) {
     @Entity
     @Table
-    class PersistentLand(@Column var legalLandId: String
+    class PersistentLand(
+            @Column var landId: String
     ) : PersistentState() {  constructor(): this("") }
 }
