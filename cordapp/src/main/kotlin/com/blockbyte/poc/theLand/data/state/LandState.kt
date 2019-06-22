@@ -1,7 +1,7 @@
 package com.blockbyte.poc.theLand.data.state
 
 import com.blockbyte.poc.theLand.contract.LandOperationalContract
-import com.blockbyte.poc.theLand.data.LandProperty
+import com.blockbyte.poc.theLand.data.LandDetails
 import com.blockbyte.poc.theLand.data.LeasePrice
 import net.corda.core.contracts.Command
 import net.corda.core.contracts.LinearState
@@ -9,6 +9,7 @@ import net.corda.core.contracts.StateAndRef
 import net.corda.core.contracts.UniqueIdentifier
 import net.corda.core.identity.AbstractParty
 import net.corda.core.node.services.Vault
+import net.corda.core.node.services.vault.Builder.equal
 import net.corda.core.node.services.vault.QueryCriteria
 import net.corda.core.node.services.vault.builder
 import net.corda.core.schemas.MappedSchema
@@ -22,7 +23,7 @@ enum class Status { FREE, OCCUPIED, UNAVAILABLE }
 
 data class LandState(
         val landId: String,
-        val property: LandProperty,
+        val details: LandDetails,
         val price: LeasePrice,
         val status: Status =  Status.FREE,
         override val participants: List<AbstractParty>,
@@ -31,7 +32,11 @@ data class LandState(
     override fun supportedSchemas(): Iterable<MappedSchema> = listOf(LandSchemaV1)
     override fun generateMappedObject(schema: MappedSchema): PersistentState {
         return when (schema) {
-            is LandSchemaV1 -> LandSchemaV1.PersistentLand(landId)
+            is LandSchemaV1 -> LandSchemaV1.PersistentLand(
+                    landId,
+                    details.size,
+                    details.beforeDate,
+                    details.afterDate)
             else -> throw IllegalArgumentException("Unrecognised schema $schema")
         }
     }
@@ -39,11 +44,11 @@ data class LandState(
     companion object {
         fun createLand(trxBuilder: TransactionBuilder,
                        landId: String,
-                       landProperty: LandProperty,
+                       landDetails: LandDetails,
                        leasePrice : LeasePrice,
                        landOwner: AbstractParty,
                        maintainer: AbstractParty) {
-            val landState = LandState(landId, landProperty, leasePrice, participants = listOf(landOwner, maintainer))
+            val landState = LandState(landId, landDetails, leasePrice, participants = listOf(landOwner, maintainer))
             val txCommand = Command(LandOperationalContract.Commands.OfferLand(), landOwner.owningKey)
 
             trxBuilder.addOutputState(landState, LandOperationalContract.ID).addCommand(txCommand)
@@ -61,11 +66,11 @@ data class LandState(
             trxBuilder.addOutputState(leaseLand, LandOperationalContract.ID).addCommand(txCommand)
         }
 
+        fun where(landId: String) =
+            QueryCriteria.VaultCustomQueryCriteria(LandSchemaV1.PersistentLand::landId.equal(landId))
+
         fun buildQuery(landId: String) = builder {
-            QueryCriteria.VaultQueryCriteria(Vault.StateStatus.UNCONSUMED)
-                    .and( QueryCriteria.VaultCustomQueryCriteria(
-                            LandSchemaV1.PersistentLand::landId.equal(landId))
-                    )
+            QueryCriteria.VaultQueryCriteria(Vault.StateStatus.UNCONSUMED).and(where(landId))
         }
     }
 }

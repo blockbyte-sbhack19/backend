@@ -5,7 +5,6 @@ import com.blockbyte.poc.theLand.contract.LandOperationalContract.Companion.ID
 import com.blockbyte.poc.theLand.data.*
 import com.blockbyte.poc.theLand.data.state.LandState
 import com.blockbyte.poc.theLand.flow.RequestForLeaseFlow
-import com.blockbyte.poc.theLand.flow.RequestForListingFlow
 import net.corda.core.node.services.queryBy
 import net.corda.core.utilities.getOrThrow
 import net.corda.core.node.services.vault.QueryCriteria
@@ -19,7 +18,7 @@ class RequestForLeasingTest: MockNet() {
     @Test
     fun `lease the land`() {
 
-        val property = LandProperty("coordinate", 1, 100, 100)
+        val property = LandDetails("coordinate", 1, 100, 100)
         val price = LeasePrice(1000, mapOf(), mapOf())
 
         val testLandState = LandState("landid#1", property, price,
@@ -38,10 +37,10 @@ class RequestForLeasingTest: MockNet() {
         val testLand = Land(testLandState.landId, lender.getParty())
         val testLease = Lease(
                 testLandState.price.landPrice,
-                BioStandart.UNKNOWN,
+                BioStandard.UNKNOWN,
                 Crop.UNKNOWN,
-                testLandState.property.beforeDate,
-                testLandState.property.afterDate)
+                testLandState.details.beforeDate,
+                testLandState.details.afterDate)
 
         val requestForLeasing = RequestForLeaseFlow.Proposal(testLand, testLease)
         val requestForListingRes = lender.startFlow(requestForLeasing).toCompletableFuture()

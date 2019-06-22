@@ -16,7 +16,7 @@ class RequestForListingTest: MockNet()  {
     @Test
     fun `request for new land can be listed`() {
 
-        val testLand = LandProperty(
+        val testLand = LandDetails(
                 coordinate = "coordinate",
                 size = 10000,
                 beforeDate = 40000,
@@ -24,9 +24,9 @@ class RequestForListingTest: MockNet()  {
 
         val testPrice = LeasePrice(
                 landPrice = 10000L,
-                feeForStandart = mapOf(
-                        Pair(BioStandart.NO_GMO, 1000L),
-                        Pair(BioStandart.ANIMALS, 2000L)
+                feeForStandard = mapOf(
+                        Pair(BioStandard.NO_GMO, 1000L),
+                        Pair(BioStandard.ANIMALS, 2000L)
                 ),
                 feeForCrop = mapOf(
                         Pair(Crop.ANIMALS, 1000L),

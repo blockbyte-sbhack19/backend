@@ -1,7 +1,7 @@
 package com.blockbyte.poc.theLand.flow
 
 import co.paralleluniverse.fibers.Suspendable
-import com.blockbyte.poc.theLand.data.LandProperty
+import com.blockbyte.poc.theLand.data.LandDetails
 import com.blockbyte.poc.theLand.data.LeasePrice
 import com.blockbyte.poc.theLand.data.state.LandState
 import com.blockbyte.poc.theLand.whoAmI
@@ -9,7 +9,6 @@ import com.blockbyte.poc.theLand.whoIs
 import com.blockbyte.poc.theLand.whoIsNotary
 import net.corda.core.flows.*
 import net.corda.core.identity.CordaX500Name
-import net.corda.core.identity.Party
 import net.corda.core.serialization.CordaSerializable
 import net.corda.core.transactions.SignedTransaction
 import net.corda.core.transactions.TransactionBuilder
@@ -19,14 +18,14 @@ import java.util.*
 class RequestForListingFlow {
 
     @CordaSerializable
-    data class LandOffer(val property: LandProperty, val price: LeasePrice)
+    data class LandOffer(val details: LandDetails, val price: LeasePrice)
 
     @CordaSerializable
     data class LandRecord(val landId: String)
 
     @InitiatingFlow
     @StartableByRPC
-    class Offer(private val landProperty: LandProperty,
+    class Offer(private val landDetails: LandDetails,
                 private val leasePrice: LeasePrice,
                 private val serviceProviderName: CordaX500Name) : FlowLogic<Unit>() {
 
@@ -35,7 +34,7 @@ class RequestForListingFlow {
             try {
                 val flowSession: FlowSession = initiateFlow(whoIs(serviceProviderName))
 
-                flowSession.send(LandOffer(landProperty, leasePrice))
+                flowSession.send(LandOffer(landDetails, leasePrice))
 
                 val verifyTxFlow = object : SignTransactionFlow(flowSession) {
                     @Suspendable
@@ -62,10 +61,10 @@ class RequestForListingFlow {
                 val txBuilder = TransactionBuilder(whoIsNotary())
 
                 val (land, price) = flowSession.receive<LandOffer>().unwrap {
-                    offer -> Pair(offer.property, offer.price) }
+                    offer -> Pair(offer.details, offer.price) }
 
                 // Stage 1.
-                val landRecord = queryLandRegistry(land.coordinate)
+                val landRecord = queryLandRegistry(land.altitude, land.latitude)
                 // TODO: request personal credential and check against proper ownership of the land
 
                 // Stage 2.
@@ -91,7 +90,7 @@ class RequestForListingFlow {
 
         // TODO: query to oracle
         @Suspendable
-        private fun queryLandRegistry(location: String): LandRecord =
+        private fun queryLandRegistry(altitude: Long, latitude: Long): LandRecord =
             LandRecord(UUID.randomUUID().toString())
     }
 }

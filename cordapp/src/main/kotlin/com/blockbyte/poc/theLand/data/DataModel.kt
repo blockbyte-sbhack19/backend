@@ -1,10 +1,9 @@
 package com.blockbyte.poc.theLand.data
 
-import net.corda.core.identity.Party
 import net.corda.core.serialization.CordaSerializable
 
 @CordaSerializable
-enum class BioStandart {
+enum class BioStandard {
     UNKNOWN,
     ORGANIC,
     NO_GMO,
@@ -21,17 +20,19 @@ enum class Crop {
     ANIMALS
 }
 
+// TODO: I dont like to have dates here, need to move away
 @CordaSerializable
-data class LandProperty(
-        val coordinate: String,
-        val size: Long,
+data class LandDetails(
+        val latitude: Long,
+        val altitude: Long,
+        val size: Int,
         val beforeDate: Long,
         val afterDate: Long)
 
 @CordaSerializable
 data class LeasePrice(
         val landPrice: Long,
-        val feeForStandart: Map<BioStandart, Long>,
+        val feeForStandard: Map<BioStandard, Long>,
         val feeForCrop: Map<Crop, Long>)
 
 @CordaSerializable
@@ -40,10 +41,26 @@ data class Land(
         val owner: String)
 
 @CordaSerializable
+data class LandInfo(
+        val land: Land,
+        val lease: LeasePrice,
+        val details: LandDetails
+)
+
+@CordaSerializable
 data class Lease(
         val finalPrice: Long,
-        val bioStandarts: BioStandart,
+        val bioStandards: BioStandard,
         val typeOfCrop: Crop,
         val beforeDate: Long,
         val afterDate: Long)
+
+@CordaSerializable
+data class Filter(
+        val maxPrice: Int,
+        val minPrice: Int,
+        val typeOfCrop:  List<Crop>,
+        val bioStandard: List<BioStandard>,
+        val beforeDate: Long,
+        val afterDate:  Long)
 

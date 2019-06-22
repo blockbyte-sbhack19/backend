@@ -1,6 +1,6 @@
 package com.blockbyte.poc.theLand.data.schema
 
-import com.blockbyte.poc.theLand.data.BioStandart
+import com.blockbyte.poc.theLand.data.BioStandard
 import com.blockbyte.poc.theLand.data.Crop
 import com.blockbyte.poc.theLand.data.Lease
 import net.corda.core.schemas.MappedSchema
@@ -22,7 +22,7 @@ object LeaseSchemaV1 : MappedSchema(
     class PersistentLease(
             @Column var landId: String,
             @Column var crop: Crop,
-            @Column var standart: BioStandart,
+            @Column var standard: BioStandard,
             @Column var price: Long,
             @Column var beforeDate: Long,
             @Column var afterDate: Long
@@ -30,7 +30,7 @@ object LeaseSchemaV1 : MappedSchema(
         constructor(landId: String, lease: Lease): this(
                 landId,
                 lease.typeOfCrop,
-                lease.bioStandarts,
+                lease.bioStandards,
                 lease.finalPrice,
                 lease.beforeDate,
                 lease.afterDate)
