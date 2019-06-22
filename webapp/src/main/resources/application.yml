@@ -1,0 +1,33 @@
+spring:
+  profiles: lender
+server:
+  port: 8081
+node:
+  address: localhost
+  rpcPort: 10102
+  rpcUser: user1
+  rpcPassword: test
+
+---
+
+spring:
+  profiles: leaser
+server:
+  port: 8082
+node:
+  address: localhost
+  rpcPort: 10202
+  rpcUser: user1
+  rpcPassword: test
+
+---
+
+spring:
+  profiles: serviceProvider
+server:
+  port: 8083
+node:
+  address: localhost
+  rpcPort: 10302
+  rpcUser: user1
+  rpcPassword: test
