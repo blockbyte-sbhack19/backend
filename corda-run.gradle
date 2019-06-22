@@ -26,7 +26,9 @@ task deployNodes(type: net.corda.plugins.Cordform, group: RUN_CORDA_GROUP) {
             address("localhost:10702")
             adminAddress("localhost:10703")
         }
-        cordapps = ["com.blockbyte.poc.theLend:cordapp:0.1"]
+        cordapps = [
+                "com.blockbyte.poc.theLend:cordapp:0.1",
+        ]
         rpcUsers = [[user: "user1", "password": "test", "permissions": ["ALL"]]]
     }
 
@@ -90,9 +92,9 @@ task deployCordappToNodes(group: RUN_CORDA_GROUP) {
     }
 }
 
-task killCordaProcesses(type: Exec, group: RUN_CORDA_GROUP) {
-    commandLine "bash", "-c", 'kill -9 `jps | grep "Corda" | cut -d " " -f 1` || true'
-}
+//task killCordaProcesses(type: Exec, group: RUN_CORDA_GROUP) {
+//    commandLine "bash", "-c", 'kill -9 `jps | grep "Corda" | cut -d " " -f 1` || true'
+//}
 
 task deployCordaNetwork(group: RUN_CORDA_GROUP) {
     dependsOn deployNodes

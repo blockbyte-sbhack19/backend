@@ -61,3 +61,7 @@ task integrationTest(type: Test, dependsOn: []) {
     testClassesDirs = sourceSets.integrationTest.output.classesDirs
     classpath = sourceSets.integrationTest.runtimeClasspath
 }
+
+test {
+    jvmArgs = [ "-javaagent:lib/quasar.jar" ]
+}
