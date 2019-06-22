@@ -16,12 +16,14 @@
 
 package com.blockbyte.web.controllers
 
+import com.blockbyte.poc.theLand.X500Names
 import com.blockbyte.poc.theLand.data.LandProperty
 import com.blockbyte.poc.theLand.data.LeasePrice
 import com.blockbyte.poc.theLand.flow.RequestForListingFlow
 import com.blockbyte.web.components.RPCComponent
 import com.blockbyte.web.data.API
 import com.blockbyte.web.data.FAILURE
+import net.corda.core.messaging.startFlow
 import net.corda.core.utilities.getOrThrow
 import net.corda.core.utilities.loggerFor
 import org.springframework.context.annotation.Profile
@@ -33,7 +35,7 @@ import java.time.Duration
 @RequestMapping("api/lender")
 @CrossOrigin
 @Profile("lender")
-class LenderController(rpc: RPCComponent) {
+class LenderController(val rpc: RPCComponent) {
     private final val proxy = rpc.services
     private final val logger = loggerFor<LenderController>()
 
@@ -46,10 +48,10 @@ class LenderController(rpc: RPCComponent) {
     fun resultForNewListing(@RequestBody land: API.Land): Any {
         return try {
             val landProperty = LandProperty(land.coordinate, land.landSize, land.beforeDate, land.afterDate)
-            val leaseProperty = LeasePrice(land.landPrice, land.feeForStandart, land.feeForCrop)
+            val leasePrice = LeasePrice(land.landPrice, land.feeForStandart, land.feeForCrop)
 
-            val future = proxy.startFlowDynamic(
-                    RequestForListingFlow.Offer::class.java, landProperty, leaseProperty).returnValue
+            val future = proxy.startFlow(RequestForListingFlow::Offer,
+                    landProperty, leasePrice, X500Names.ServiceProvider).returnValue
 
             future.getOrThrow(Duration.ofSeconds(15))
 

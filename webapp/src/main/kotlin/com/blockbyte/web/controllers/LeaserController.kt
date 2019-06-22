@@ -16,12 +16,15 @@
 
 package com.blockbyte.web.controllers
 
+import com.blockbyte.poc.theLand.X500Names
 import com.blockbyte.poc.theLand.data.Land
 import com.blockbyte.poc.theLand.data.Lease
 import com.blockbyte.poc.theLand.flow.RequestForLeaseFlow
+import com.blockbyte.poc.theLand.flow.RequestForListingFlow
 import com.blockbyte.web.components.RPCComponent
 import com.blockbyte.web.data.API
 import net.corda.core.identity.CordaX500Name
+import net.corda.core.messaging.startFlow
 import net.corda.core.utilities.getOrThrow
 import net.corda.core.utilities.loggerFor
 import org.springframework.context.annotation.Profile
@@ -47,11 +50,9 @@ class LeaserController(rpc: RPCComponent) {
     @PostMapping("soil")
     fun resultForNewLeasing(@RequestBody lease: API.Lease) {
         return try {
-            val owner = proxy.wellKnownPartyFromX500Name(CordaX500Name.parse(lease.landOwner))
-
             val land = Land(
                     lease.landId,
-                    owner!!)
+                    lease.landOwner)
 
             val lease = Lease(
                     lease.finalPrice,
@@ -60,9 +61,7 @@ class LeaserController(rpc: RPCComponent) {
                     lease.beforeDate,
                     lease.afterDate)
 
-            val future = proxy.startFlowDynamic(
-                    RequestForLeaseFlow.Proposal::class.java, land, lease).returnValue
-
+            val future = proxy.startFlow(RequestForLeaseFlow::Proposal, land, lease).returnValue
             future.getOrThrow(Duration.ofSeconds(15))
 
         } catch (e: Exception) {
