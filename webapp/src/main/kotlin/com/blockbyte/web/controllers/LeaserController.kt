@@ -63,7 +63,7 @@ class LeaserController(rpc: RPCComponent) {
         return proxy.startFlow(SearchAvailableLandsFlow::Search, filter, serviceProvider).returnValue.get()
     }
 
-    @PostMapping("soil")
+    @PostMapping("soil/lease")
     fun requestForNewLeasing(@RequestBody lease: API.Lease) {
         return try {
             val owner = CordaX500Name.parse(lease.landOwner)
@@ -82,6 +82,16 @@ class LeaserController(rpc: RPCComponent) {
             val future = proxy.startFlow(RequestForLeaseFlow::Proposal, land, lease).returnValue
             future.getOrThrow(Duration.ofSeconds(15))
 
+        } catch (e: Exception) {
+            logger.error("The land has not beed leased", e)
+        }
+    }
+
+    @PostMapping("soil/free")
+    fun breakTheLease(@RequestBody landId: String) {
+        return try {
+            val future = proxy.startFlow(RequestForLeaseFlow::Proposal, landId).returnValue
+            future.getOrThrow(Duration.ofSeconds(15))
         } catch (e: Exception) {
             logger.error("The land has not beed leased", e)
         }
