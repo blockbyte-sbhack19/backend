@@ -64,7 +64,7 @@ class LeaserController(rpc: RPCComponent) {
     }
 
     @PostMapping("soil")
-    fun resultForNewLeasing(@RequestBody lease: API.Lease) {
+    fun requestForNewLeasing(@RequestBody lease: API.Lease) {
         return try {
             val owner = CordaX500Name.parse(lease.landOwner)
 

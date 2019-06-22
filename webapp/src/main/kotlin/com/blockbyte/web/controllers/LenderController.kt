@@ -45,7 +45,7 @@ class LenderController(val rpc: RPCComponent) {
     }
 
     @PostMapping("soil")
-    fun resultForNewListing(@RequestBody land: API.Land): Any {
+    fun requestForNewListing(@RequestBody land: API.Land): Any {
         return try {
             val landProperty = LandDetails(land.altitude, land.latitude, land.landSize, land.beforeDate, land.afterDate)
             val leasePrice = LeasePrice(land.landPrice, land.feeForStandard, land.feeForCrop)
