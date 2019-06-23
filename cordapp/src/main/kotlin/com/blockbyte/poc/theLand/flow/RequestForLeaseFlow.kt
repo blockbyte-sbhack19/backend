@@ -31,7 +31,7 @@ class RequestForLeaseFlow {
         @Suspendable
         override fun call() {
             try {
-                val flowSession: FlowSession = initiateFlow(whoIs(land.owner!!))
+                val flowSession: FlowSession = initiateFlow(whoIs(CordaX500Name.parse(land.owner)))
                 flowSession.send(LeaseRequest(land.id, lease))
 
                 val verifyTxFlow = object : SignTransactionFlow(flowSession) {

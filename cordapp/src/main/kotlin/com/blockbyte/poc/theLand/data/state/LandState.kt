@@ -8,6 +8,7 @@ import net.corda.core.contracts.LinearState
 import net.corda.core.contracts.StateAndRef
 import net.corda.core.contracts.UniqueIdentifier
 import net.corda.core.identity.AbstractParty
+import net.corda.core.identity.Party
 import net.corda.core.node.services.Vault
 import net.corda.core.node.services.vault.Builder.equal
 import net.corda.core.node.services.vault.QueryCriteria
@@ -26,6 +27,7 @@ data class LandState(
         val details: LandDetails,
         val price: LeasePrice,
         val status: Status =  Status.FREE,
+        val owner: Party,
         override val participants: List<AbstractParty>,
         override val linearId: UniqueIdentifier = UniqueIdentifier()
 ) : LinearState, QueryableState {
@@ -43,15 +45,19 @@ data class LandState(
     }
 
     companion object {
-        fun createLand(trxBuilder: TransactionBuilder,
-                       landId: String,
-                       landDetails: LandDetails,
-                       leasePrice : LeasePrice,
-                       landOwner: AbstractParty,
-                       maintainer: AbstractParty) {
-            val landState = LandState(landId, landDetails, leasePrice, participants = listOf(landOwner, maintainer))
+        fun registerLand(trxBuilder: TransactionBuilder,
+                         landId: String,
+                         landDetails: LandDetails,
+                         leasePrice : LeasePrice,
+                         landOwner: Party,
+                         provider: Party) {
+            val landState = LandState(
+                    landId,
+                    landDetails,
+                    leasePrice,
+                    owner = landOwner,
+                    participants = listOf(landOwner, provider))
             val txCommand = Command(LandOperationalContract.Commands.OfferLand(), landOwner.owningKey)
-
             trxBuilder.addOutputState(landState, LandOperationalContract.ID).addCommand(txCommand)
         }
 
@@ -67,11 +73,21 @@ data class LandState(
             trxBuilder.addOutputState(leaseLand, LandOperationalContract.ID).addCommand(txCommand)
         }
 
-        fun where(landId: String) =
-            QueryCriteria.VaultCustomQueryCriteria(LandSchemaV1.PersistentLand::landId.equal(landId))
+        fun freeLand(trxBuilder: TransactionBuilder,
+                     land: StateAndRef<LandState>,
+                     leaser: AbstractParty) {
+            val owner = land.state.data.owner
+            val participants = land.state.data.participants - leaser
+            val leaseLand = land.state.data.copy(status = Status.FREE, participants = participants)
+            val txCommand = Command(LandOperationalContract.Commands.FreeLand(), listOf(leaser.owningKey, owner.owningKey))
+
+            trxBuilder.addInputState(land)
+            trxBuilder.addOutputState(leaseLand, LandOperationalContract.ID).addCommand(txCommand)
+        }
 
         fun buildQuery(landId: String) = builder {
-            QueryCriteria.VaultQueryCriteria(Vault.StateStatus.UNCONSUMED).and(where(landId))
+            QueryCriteria.VaultQueryCriteria(Vault.StateStatus.UNCONSUMED)
+                    .and(QueryCriteria.VaultCustomQueryCriteria(LandSchemaV1.PersistentLand::landId.equal(landId)))
         }
     }
 }

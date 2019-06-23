@@ -34,4 +34,11 @@ interface API {
             val bioStandard: List<BioStandard>,
             val beforeDate: Long,
             val afterDate:  Long)
+
+    data class Occupation(
+            val landId: String,
+            val lender: String,
+            val finalPrice: Int,
+            val beforeDate: Long,
+            val afterDate: Long)
 }

@@ -27,12 +27,6 @@ object LeaseSchemaV1 : MappedSchema(
             @Column var beforeDate: Long,
             @Column var afterDate: Long
     ) : PersistentState() {
-        constructor(landId: String, lease: Lease): this(
-                landId,
-                lease.typeOfCrop,
-                lease.bioStandards,
-                lease.finalPrice,
-                lease.beforeDate,
-                lease.afterDate)
+        constructor(): this("", Crop.UNKNOWN, BioStandard.UNKNOWN, 0, 0, 0)
     }
 }
