@@ -16,7 +16,7 @@ import net.corda.core.node.services.vault.builder
 import net.corda.core.serialization.CordaSerializable
 import net.corda.core.utilities.unwrap
 
-class SearchAvailableLandsFlow {
+class LookupLandsFlow {
 
     @CordaSerializable
     data class LandCollection(val lands: List<LandInfo>)
@@ -28,7 +28,7 @@ class SearchAvailableLandsFlow {
         @Suspendable
         override fun call(): LandCollection {
             return try {
-            // TODO: Actually the Oracle has to be query instead of Service Provider
+                // TODO: Actually the Oracle has to be query instead of Service Provider
                 val flowSession: FlowSession = initiateFlow(whoIs(serviceProviderName))
                 flowSession.sendAndReceive<LandCollection>(filter).unwrap { it }
             } catch(e: Exception) {
@@ -39,7 +39,7 @@ class SearchAvailableLandsFlow {
     }
 
     @InitiatedBy(Search::class)
-    class A(private val flowSession: FlowSession) : FlowLogic<Unit>() {
+    class Explorer(private val flowSession: FlowSession) : FlowLogic<Unit>() {
 
         @Suspendable
         override fun call() {
@@ -56,11 +56,12 @@ class SearchAvailableLandsFlow {
                         serviceHub.vaultService.queryBy<LandState>(customCriteria)
                     }.states
 
+                    // TODO: implement: 1) additional opptions to filter the lands 2) query based on grouped LandState and LeaseState
 
                     val collection = LandCollection(lands
                             .map { it -> it.state.data }
                             .map { it ->
-                                val land = Land(it.landId, null)
+                                val land = Land(it.landId, it.owner.name.toString())
                                 LandInfo(land, it.price, it.details)
                             })
 
@@ -68,7 +69,7 @@ class SearchAvailableLandsFlow {
                 }
 
             } catch (e: Exception) {
-                logger.error("The can not be listed", e)
+                logger.error("The lands look up has been failed", e)
                 throw FlowException(e.message)
             }
         }

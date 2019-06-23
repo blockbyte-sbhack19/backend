@@ -71,7 +71,7 @@ class RequestForListingFlow {
                 val owner = flowSession.counterparty
                 val myNode = whoAmI()
 
-                LandState.createLand(txBuilder, landRecord.landId, land, price, owner, myNode)
+                LandState.registerLand(txBuilder, landRecord.landId, land, price, owner, myNode)
 
                 // Stage 3.
                 txBuilder.verify(serviceHub)

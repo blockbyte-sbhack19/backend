@@ -39,7 +39,7 @@ data class LeasePrice(
 @CordaSerializable
 data class Land(
         val id: String,
-        val owner: CordaX500Name?)
+        val owner: String)
 
 @CordaSerializable
 data class LandInfo(

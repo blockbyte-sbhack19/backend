@@ -14,8 +14,10 @@ class LandOperationalContract : Contract {
     interface Commands : CommandData {
         class OfferLand : TypeOnlyCommandData(), Commands
         class LeaseLand : TypeOnlyCommandData(), Commands
+        class FreeLand : TypeOnlyCommandData(), Commands
     }
 
     override fun verify(tx: LedgerTransaction) {
+        // TODO: provide formal checks, e.g date, inputs/outputs, etc
     }
 }
